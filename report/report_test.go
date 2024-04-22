@@ -2,6 +2,7 @@ package report
 
 import (
 	"gitlabsprintreport/gitlab"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -50,9 +51,14 @@ func TestStatusDuration(t *testing.T) {
 		},
 	}
 	issue := gitlab.Issue{Id: 359, Title: "Teste Unitário totalizador (UTIL)", StatusChanges: statusChange}
-	sds := newIssueProgress(issue)
-	expected := StatusDuration{status: "In Progress", duration: time.Duration(259200000000000), isStillGoing: false}
-	if sds != expected {
-		t.Fatalf("Value %+v is not equals to %+v", sds[0], expected)
+	sds := newIssueProgress(issue, NewIssueProgressConfig([]string{"To do", "In Progress", "PR", "QA"}))
+	expected := issueProgress{
+		title: "Teste Unitário totalizador (UTIL)",
+		progress: []progress{{
+			status: "In Progress", duration: time.Duration(259200000000000), isStillGoing: false,
+		}},
+	}
+	if !reflect.DeepEqual(sds, expected) {
+		t.Fatalf("Value %+v is not equals to %+v", sds, expected)
 	}
 }

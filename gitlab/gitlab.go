@@ -67,13 +67,15 @@ type issuesPage struct {
 }
 
 type Config struct {
-	URL           string
-	PersonalToken string
-	ProjectId     uint64
+	URL             string
+	PersonalToken   string
+	ProjectId       uint64
+	TrackLabels     []string
+	TrackIssueTypes []string
 }
 
-func NewConfig(url string, personalToken string, projectId uint64) Config {
-	return Config{url, personalToken, projectId}
+func NewConfig(url string, personalToken string, projectId uint64, trackLabels []string, trackIssueTypes []string) Config {
+	return Config{url, personalToken, projectId, trackLabels, trackIssueTypes}
 }
 
 func newGitLabRequest(config Config, path string) (*http.Request, error) {
@@ -214,12 +216,11 @@ func fetchIssues(client *http.Client, config Config, issueType string, labels st
 }
 
 func IssuesFromSprint(client *http.Client, config Config, sprintLabel string) ([]Issue, error) {
-	labels := []string{"To do", "In Progress", "QA", "Done"} //config
-	issueType := []string{"issue", "incident"}               //config
+	fmt.Printf("Fetching issues from: %s\n", config.URL)
 	var issues = []Issue{}
-	for _, l := range labels {
+	for _, l := range config.TrackLabels {
 		ls := strings.Join([]string{l, sprintLabel}, ",")
-		for _, it := range issueType {
+		for _, it := range config.TrackIssueTypes {
 			fetchedIssues, err := fetchIssues(client, config, it, ls)
 			if err != nil {
 				return nil, err

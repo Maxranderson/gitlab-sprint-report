@@ -12,14 +12,27 @@ func main() {
 
 	httpClient := &http.Client{}
 	fmt.Println("Starting...")
-	gitLabConfig := gitlab.NewConfig("**", "**", 0)
-	issues, err := gitlab.IssuesFromSprint(httpClient, gitLabConfig, "Sprint-4")
+	config, err := loadConfig()
 	if err != nil {
-		panic(err)
+		fmt.Printf("Error: %s\n", err.Error())
+		os.Exit(2)
 	}
-	fmt.Printf("FOUND %+v\n", issues)
-	config := report.NewIssueProgressConfig([]string{"To do", "In Progress", "PR", "QA"})
-	issueProgressReport := report.NewIssueProgressReport(issues, config)
+	gitLabConfig := gitlab.NewConfig(
+		config.GitLabConfig.URL,
+		config.GitLabConfig.PersonalToken,
+		config.GitLabConfig.ProjectId,
+		config.GitLabConfig.TrackLabels,
+		config.GitLabConfig.TrackIssueTypes,
+	)
+	issues, err := gitlab.IssuesFromSprint(httpClient, gitLabConfig, "Sprint-1")
+	if err != nil {
+		fmt.Printf("Error: %s\n", err.Error())
+		os.Exit(2)
+	}
+	fmt.Printf("FOUND %d issues\n", len(issues))
+	reportConfig := report.NewIssueProgressConfig([]string{"To do", "In Progress", "PR", "QA"})
+	fmt.Println("Generating Issue progress report...")
+	issueProgressReport := report.NewIssueProgressReport(issues, reportConfig)
 	issueProgressReport.PrintTable(os.Stdout)
 
 }
