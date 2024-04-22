@@ -54,9 +54,14 @@ func (status *Status) SortEvents() {
 	})
 }
 
+type User struct {
+	Name string `json:"name"`
+}
+
 type Issue struct {
 	Id            uint64 `json:"iid"`
 	Title         string `json:"title"`
+	Assignee      User
 	StatusChanges []Status
 }
 

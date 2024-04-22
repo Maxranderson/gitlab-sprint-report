@@ -6,6 +6,7 @@ import (
 	"gitlabsprintreport/report"
 	"net/http"
 	"os"
+	"path/filepath"
 )
 
 func main() {
@@ -24,15 +25,29 @@ func main() {
 		config.GitLabConfig.TrackLabels,
 		config.GitLabConfig.TrackIssueTypes,
 	)
-	issues, err := gitlab.IssuesFromSprint(httpClient, gitLabConfig, "Sprint-1")
+	sprintLabel := "Sprint-5"
+	issues, err := gitlab.IssuesFromSprint(httpClient, gitLabConfig, sprintLabel)
 	if err != nil {
 		fmt.Printf("Error: %s\n", err.Error())
 		os.Exit(2)
 	}
-	fmt.Printf("FOUND %d issues\n", len(issues))
-	reportConfig := report.NewIssueProgressConfig([]string{"To do", "In Progress", "PR", "QA"})
+	fmt.Printf("Found %d issues\n", len(issues))
+	reportConfig := report.NewIssueProgressConfig([]string{"To do", "In Progress", "PR", "QA"}, "Done", []string{sprintLabel})
 	fmt.Println("Generating Issue progress report...")
 	issueProgressReport := report.NewIssueProgressReport(issues, reportConfig)
-	issueProgressReport.PrintTable(os.Stdout)
-
+	path, err := os.Getwd()
+	if err != nil {
+		fmt.Printf("Error: %s\n", err.Error())
+		os.Exit(2)
+	}
+	filename := fmt.Sprintf("%s-report.txt", sprintLabel)
+	outputFile := filepath.Join(path, filename)
+	file, err := os.Create(outputFile)
+	if err != nil {
+		fmt.Printf("Error: %s\n", err.Error())
+		os.Exit(2)
+	}
+	issueProgressReport.PrintTable(file)
+	file.Close()
+	fmt.Printf("File generated at: %s", outputFile)
 }
